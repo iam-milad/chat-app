@@ -4,11 +4,12 @@ import toast from "react-hot-toast";
 import { axiosInstance } from "../lib/axios.js";
 
 export const useAuthStore = create((set) => ({
-    authUser: null,
-    isSigningUp: false,
-    isLoggingIn: false,
-    isUpdatingProfile: false,
-    isCheckingAuth: true,
+  authUser: null,
+  isSigningUp: false,
+  isLoggingIn: false,
+  isUpdatingProfile: false,
+  isCheckingAuth: true,
+  onlineUsers: [],
 
   checkAuth: async () => {
     try {
