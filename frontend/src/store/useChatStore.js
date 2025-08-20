@@ -9,6 +9,7 @@ export const useChatStore = create((set, get) => ({
   selectedUser: null,
   isUsersLoading: false,
   isMessagesLoading: false,
+  typingData: null,
 
   getUsers: async () => {
     set({ isUsersLoading: true });
@@ -56,6 +57,20 @@ export const useChatStore = create((set, get) => ({
       set({
         messages: [...get().messages, newMessage],
       });
+    });
+
+    socket.on("isTyping", (typingData) => {
+      set({ typingData: typingData });
+    });
+  },
+
+  isUserTyping: (senderId, recipientId, isTyping) => {
+    const socket = useAuthStore.getState().socket;
+
+    socket.emit('isTyping', {
+      senderId,
+      recipientId,
+      isTyping,
     });
   },
 

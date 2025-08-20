@@ -1,5 +1,6 @@
 import { useRef, useState } from "react";
 import { useChatStore } from "../store/useChatStore";
+import { useAuthStore } from "../store/useAuthStore";
 import { Image, Send, X } from "lucide-react";
 import toast from "react-hot-toast";
 
@@ -7,7 +8,9 @@ const MessageInput = () => {
   const [text, setText] = useState("");
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
-  const { sendMessage } = useChatStore();
+  const { sendMessage, selectedUser, isUserTyping, typingData } =
+    useChatStore();
+  const { authUser } = useAuthStore();
 
   const handleImageChange = (e) => {
     const file = e.target.files[0];
@@ -40,11 +43,20 @@ const MessageInput = () => {
 
       // Clear form
       setText("");
+      isUserTyping(authUser._id, selectedUser._id, false);
       setImagePreview(null);
       if (fileInputRef.current) fileInputRef.current.value = "";
     } catch (error) {
       console.error("Failed to send message:", error);
     }
+  };
+
+  const handleMessageTyping = (e) => {
+    const { value } = e.target;
+    const isTyping = value.length > 0;
+
+    isUserTyping(authUser._id, selectedUser._id, isTyping);
+    setText(value);
   };
 
   return (
@@ -69,14 +81,31 @@ const MessageInput = () => {
         </div>
       )}
 
+      {typingData?.isTyping && (
+        <div className="flex gap-2 items-center mb-2">
+          <div className="chat-image avatar">
+            <div className="size-6 rounded-full border">
+              <img
+                src={selectedUser.profilePic || "/avatar.png"}
+                alt="profile pic"
+              />
+            </div>
+          </div>
+          <span className="loading loading-dots loading-sm"></span>
+          <pre className="text-[10px] opacity-50 ml-1">
+            <b>{selectedUser.fullName}</b> is typing
+          </pre>
+        </div>
+      )}
+
       <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-        <div className="flex-1 flex gap-2">
+        <div className="flex-1 flex gap-2 items-center">
           <input
             type="text"
             className="w-full input input-bordered rounded-lg input-sm sm:input-md"
             placeholder="Type a message..."
             value={text}
-            onChange={(e) => setText(e.target.value)}
+            onChange={handleMessageTyping}
           />
           <input
             type="file"
@@ -88,7 +117,7 @@ const MessageInput = () => {
 
           <button
             type="button"
-            className={`hidden sm:flex btn btn-circle
+            className={`sm:flex btn btn-circle
                      ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
             onClick={() => fileInputRef.current?.click()}
           >
