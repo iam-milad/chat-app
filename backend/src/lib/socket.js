@@ -31,6 +31,10 @@ io.on("connection", (socket) => {
     io.to(getReceiverSocketId(recipientId)).emit("isTyping", { isTyping, recipientId, senderId });
   });
 
+  socket.on("isRecordingAudio", ({ isRecordingAudio, recipientId, senderId }) => {
+    io.to(getReceiverSocketId(recipientId)).emit("isRecordingAudio", { isRecordingAudio, recipientId, senderId });
+  });
+
   socket.on("disconnect", () => {
     console.log("A user disconnected", socket.id);
     delete userSocketMap[userId];

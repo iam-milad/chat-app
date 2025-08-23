@@ -69,3 +69,40 @@ export const sendMessage = async (req, res) => {
     res.status(500).json({ error: "Internal server error" });
   }
 };
+
+export const sendAudioMessage = async (req, res) => {
+  try {
+    const { audio } = req.body;
+    const { id: receiverId } = req.params;
+    const senderId = req.user._id;
+
+    let audioUrl;
+    if (audio) {
+      // Upload base64 audio to Cloudinary
+      const uploadResponse = await cloudinary.uploader.upload(audio, {
+        resource_type: "video", // Cloudinary treats audio as 'video' resource_type
+      });
+      audioUrl = uploadResponse.secure_url;
+    }
+
+    console.log("tesst audioUrl", audioUrl);
+
+    const newMessage = new Message({
+      senderId,
+      receiverId,
+      audio: audioUrl,
+    });
+
+    await newMessage.save();
+
+    const receiverSocketId = getReceiverSocketId(receiverId);
+    if (receiverSocketId) {
+      io.to(receiverSocketId).emit("newMessage", newMessage);
+    }
+
+    res.status(201).json(newMessage);
+  } catch (error) {
+    console.error("Error in sendAudioMessage controller:", error.message);
+    res.status(500).json({ error: "Internal server error" });
+  }
+};

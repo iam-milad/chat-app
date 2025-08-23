@@ -4,11 +4,15 @@ import { useAuthStore } from "../store/useAuthStore";
 import { Image, Send, X } from "lucide-react";
 import toast from "react-hot-toast";
 
+import Recorder from "./Recorder";
+import AnimatedMic from "./AnimatedMic";
+
 const MessageInput = () => {
   const [text, setText] = useState("");
+  const [isRecording, setIsRecording] = useState(false);
   const [imagePreview, setImagePreview] = useState(null);
   const fileInputRef = useRef(null);
-  const { sendMessage, selectedUser, isUserTyping, typingData } =
+  const { sendMessage, selectedUser, isUserTyping, typingData, recordingData } =
     useChatStore();
   const { authUser } = useAuthStore();
 
@@ -98,39 +102,60 @@ const MessageInput = () => {
         </div>
       )}
 
-      <form onSubmit={handleSendMessage} className="flex items-center gap-2">
-        <div className="flex-1 flex gap-2 items-center">
-          <input
-            type="text"
-            className="w-full input input-bordered rounded-lg input-sm sm:input-md"
-            placeholder="Type a message..."
-            value={text}
-            onChange={handleMessageTyping}
-          />
-          <input
-            type="file"
-            accept="image/*"
-            className="hidden"
-            ref={fileInputRef}
-            onChange={handleImageChange}
-          />
-
-          <button
-            type="button"
-            className={`sm:flex btn btn-circle
-                     ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <Image size={20} />
-          </button>
+      {recordingData?.isRecordingAudio && (
+        <div className="flex gap-2 items-center mb-2">
+          <div className="chat-image avatar">
+            <div className="size-6 rounded-full border">
+              <img
+                src={selectedUser.profilePic || "/avatar.png"}
+                alt="profile pic"
+              />
+            </div>
+          </div>
+          <AnimatedMic />
         </div>
-        <button
-          type="submit"
-          className="btn btn-sm btn-circle"
-          disabled={!text.trim() && !imagePreview}
-        >
-          <Send size={22} />
-        </button>
+      )}
+
+      <form onSubmit={handleSendMessage} className="flex items-center gap-2">
+        {!isRecording && (
+          <div className="flex-1 flex gap-2 items-center">
+            <input
+              type="file"
+              accept="image/*"
+              className="hidden"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+            />
+
+            <button
+              type="button"
+              className={`sm:flex btn btn-circle
+            ${imagePreview ? "text-emerald-500" : "text-zinc-400"}`}
+              onClick={() => fileInputRef.current?.click()}
+            >
+              <Image size={20} />
+            </button>
+            <input
+              type="text"
+              className="w-full input input-bordered rounded-lg input-sm sm:input-md"
+              placeholder="Type a message..."
+              value={text}
+              onChange={handleMessageTyping}
+            />
+          </div>
+        )}
+
+        <Recorder isRecording={isRecording} setIsRecording={setIsRecording} />
+
+        {!isRecording && (
+          <button
+            type="submit"
+            className="btn btn-sm btn-circle"
+            disabled={!text.trim() && !imagePreview}
+          >
+            <Send size={22} />
+          </button>
+        )}
       </form>
     </div>
   );
